@@ -6,6 +6,7 @@ namespace SpreadsheetFluent.Test.Worksheets
     {
         public PersonInfoWorksheet()
         {
+
             CreateBlock<Person>()
                 .WithTitle("Basico")
                 .WithStyle()
@@ -30,6 +31,7 @@ namespace SpreadsheetFluent.Test.Worksheets
                         opt.Font.Bold = true;
                     })
                 .WithColumn(p => p.Name)
+                    .AutoFit()
                     .WithCaption("Nombre")
                     .WithStyle()
                         .ForCaption(opt => opt.Font.Bold = true)
@@ -48,8 +50,7 @@ namespace SpreadsheetFluent.Test.Worksheets
                         .ForCaption(opt => opt.Font.Italic = true);
 
             CreateBlock<Person>()
-                .WithTitle("Working Info")
-                .WithStartColumn(1)
+                .WithStartRow(1)
                 .WithStyle()
                     .ForHeader(opt =>
                     {
@@ -58,6 +59,14 @@ namespace SpreadsheetFluent.Test.Worksheets
                         opt.Fill.BackgroundColor.SetColor(System.Drawing.Color.Orange);
                     })
                 .WithColumn(p => p.Salary);
+
+            CreateBlock<Department>()
+                .WithDirection(Enums.BlockDirection.Above)
+                .WithTitle("Departmento")
+                .WithStartColumn(1)
+                .WithColumn(p => p.Name)
+                .WithColumn(p => p.Description)
+                    .AutoFit();
 
         }
     }

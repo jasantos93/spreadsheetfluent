@@ -42,46 +42,52 @@ namespace SpreadsheetFluent
 
         public byte[] Generate(params IEnumerable<object>[] datasets)
         {
-            using (var packages = new ExcelPackage())
+            using (var packages = CreateExcel(datasets))
             {
-                foreach (var wsc in Worksheets)
-                {
-                    var worksheet = packages.Workbook.Worksheets.Any(p => p.Name == wsc.Name)
-                                            ? packages.Workbook.Worksheets[wsc.Name]
-                                            : packages.Workbook.Worksheets.Add(wsc.Name);
-
-
-                    (int Row, int Column) lastPosition = (0, 0);
-                    for (int index = 0; index < datasets.Length; index++)
-                    {
-                        var dataset = datasets[index];
-                        var datasetType = dataset.GetType();
-
-                        var datasetArgumentType = datasetType.IsGenericType
-                                                    ? datasetType.GetGenericArguments()[0]
-                                                    : datasetType.GetElementType();
-
-                        var blocksStatic = wsc.Blocks.Where(p => p.BlockType == datasetArgumentType);
-                        if (blocksStatic == null || !blocksStatic.Any()) continue;
-
-                        foreach (var blockStatic in blocksStatic)
-                        {
-                            var block = blockStatic.Clone<WorksheetBlockBase>();
-
-                            if (wsc.Direction == BlockDirection.Above) block.StartRow += lastPosition.Row;
-                            else block.StartColumn += lastPosition.Column;
-
-                            lastPosition = WriteHeader(block, ref worksheet);
-                            lastPosition = WriteBody(dataset, block, ref worksheet);
-
-                            var allRange = worksheet.Cells[blockStatic.StartRow, blockStatic.StartColumn, lastPosition.Row, lastPosition.Column];
-                            block.ApplyStyle(WorksheetSection.All, ref allRange);
-                        }
-                    }
-                    wsc.ExcelWorksheetOptions?.Invoke(worksheet);
-                }
                 return packages.GetAsByteArray();
             }
+        }
+
+        public ExcelPackage CreateExcel(params IEnumerable<object>[] datasets)
+        {
+            var packages = new ExcelPackage();
+            foreach (var wsc in Worksheets)
+            {
+                var worksheet = packages.Workbook.Worksheets.Any(p => p.Name == wsc.Name)
+                                        ? packages.Workbook.Worksheets[wsc.Name]
+                                        : packages.Workbook.Worksheets.Add(wsc.Name);
+
+
+                (int Row, int Column) lastPosition = (0, 0);
+                for (int index = 0; index < datasets.Length; index++)
+                {
+                    var dataset = datasets[index];
+                    var datasetType = dataset.GetType();
+
+                    var datasetArgumentType = datasetType.IsGenericType
+                                                ? datasetType.GetGenericArguments()[0]
+                                                : datasetType.GetElementType();
+
+                    var blocksStatic = wsc.Blocks.Where(p => p.BlockType == datasetArgumentType);
+                    if (blocksStatic == null || !blocksStatic.Any()) continue;
+
+                    foreach (var blockStatic in blocksStatic)
+                    {
+                        var block = blockStatic.Clone<WorksheetBlockBase>();
+
+                        if (blockStatic.Direction == BlockDirection.Above) block.StartRow += lastPosition.Row;
+                        else block.StartColumn += lastPosition.Column;
+
+                        lastPosition = WriteHeader(block, ref worksheet);
+                        lastPosition = WriteBody(dataset, block, ref worksheet);
+
+                        var allRange = worksheet.Cells[blockStatic.StartRow, blockStatic.StartColumn, lastPosition.Row, lastPosition.Column];
+                        block.ApplyStyle(WorksheetSection.All, ref allRange);
+                    }
+                }
+                wsc.ExcelWorksheetOptions?.Invoke(worksheet);
+            }
+            return packages;
         }
 
         private (int Row, int Column) WriteHeader(WorksheetBlockBase block, ref ExcelWorksheet worksheet)
@@ -109,6 +115,9 @@ namespace SpreadsheetFluent
                 var column = block.StartColumn + index;
                 var cellRange = worksheet.Cells[block.StartRow, column];
                 cellRange.Value = rule.Caption?.Value ?? rule.Expression.GetMember().Name;
+
+                rule.AutoFit?.Invoke(cellRange);
+
                 rule.ApplyStyle(WorksheetSection.Caption, ref cellRange);
                 block.ApplyStyle(WorksheetSection.EachCell, ref cellRange);
 
@@ -136,7 +145,7 @@ namespace SpreadsheetFluent
                     var rule = block.Rules[index];
                     var cellRange = worksheet.Cells[currentRow, currentColumn];
                     cellRange.Value = rule.GetValue(data);
-
+                    rule.AutoFit?.Invoke(cellRange);
                     rule.ApplyStyle(WorksheetSection.Cell, ref cellRange);
                     rule.ApplyStyle(WorksheetSection.EachCell, ref cellRange);
 

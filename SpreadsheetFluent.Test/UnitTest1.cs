@@ -14,11 +14,11 @@ namespace SpreadsheetFluent.Test
         public void Test1()
         {
             var fixture = new Fixture();
-            var persons = fixture.CreateMany<Person>(100).ToList();
-
+            var persons = fixture.CreateMany<Person>(10000).ToList();
+            var departments = fixture.CreateMany<Department>(10000).ToList();
             var workbook = new EmployeeWorkbook();
 
-            var result = workbook.Generate(persons);
+            var result = workbook.Generate(persons, persons);
 
             var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Test2.xlsx");
 

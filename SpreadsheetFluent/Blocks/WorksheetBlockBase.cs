@@ -22,6 +22,7 @@ namespace SpreadsheetFluent.Blocks
         internal Lazy<string> Title { get;  set; }
         internal int StartRow { get; set; } = 1;
         internal int StartColumn { get; set; } = 1;
+        internal BlockDirection Direction { get; set; }
         internal IList<PropertyRule> Rules { get; private set; } = new List<PropertyRule>();
         internal void AddRule(PropertyRule rule) => Rules.Add(rule);
         internal T Clone<T>() where T: WorksheetBlockBase => (T)MemberwiseClone();

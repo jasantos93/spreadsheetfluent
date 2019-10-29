@@ -1,4 +1,5 @@
-﻿using SpreadsheetFluent.Rules;
+﻿using SpreadsheetFluent.Enums;
+using SpreadsheetFluent.Rules;
 using System;
 using System.Linq.Expressions;
 
@@ -17,6 +18,7 @@ namespace SpreadsheetFluent.Blocks
         IWorksheetBlock<T> WithStartColumn(int position);
         IWorksheetBlock<T> WithTitle(string value);
         IWorksheetBlockStyle<T> WithStyle();
+        IWorksheetBlock<T> WithDirection(BlockDirection direction);
     }
 
     public class WorksheetBlock<T> : WorksheetBlockBase, IWorksheetBlock<T>
@@ -63,7 +65,11 @@ namespace SpreadsheetFluent.Blocks
         {
             return new WorksheetBlockStyle<T>(this);
         }
-
+        public IWorksheetBlock<T> WithDirection(BlockDirection direction)
+        {
+            Direction = direction;
+            return this;
+        }
         public IWorksheetBlock<T> WithTitle(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return this;

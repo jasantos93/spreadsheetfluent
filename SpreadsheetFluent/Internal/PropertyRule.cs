@@ -15,6 +15,7 @@ namespace SpreadsheetFluent.Internal
 
         public Func<object, object> GetValue { get; }
         public Lazy<string> Caption { get; set; }
+        public Action<ExcelRange> AutoFit { get; set; }
         public Action<ExcelRange> Options { get; set; }
 
         public Dictionary<WorksheetSection, Action<ExcelStyle>> Styles { get; set; } = new Dictionary<WorksheetSection, Action<ExcelStyle>>();
